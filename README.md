@@ -1,4 +1,4 @@
-# INFERNUS
+# INFERNUS [www.doi.org/10.13140/RG.2.2.18744.71680]
 
 # Classification of Emission-Line Galaxies with SDSS and WISE
 
