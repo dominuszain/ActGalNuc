@@ -1,0 +1,653 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{placeins}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{url}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  breakatwhitespace=false,
+  columns=fullflexible,
+  showspaces=false,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny,
+}
+
+\makeatletter
+\def\lst@visiblespace{\ }
+\makeatother
+
+\title{Classification of Emission-Line Galaxies with SDSS and WISE}
+\date{\today}
+\author{Zain Ul Abideen\\[2pt]
+  \small\textit{Consortium of the Erasmus Mundus Joint Master Programme}\\
+  \small\textit{in Astrophysics and Space Science (MASS)}\\[2pt]
+  \small\texttt{zain.ulabideen@students.uniroma2.eu}\\[2pt]
+  \small\url{www.master-mass.eu}}
+
+\begin{document}
+\input{numbers.tex}
+\maketitle
+
+\begin{abstract}
+We classify $\sim$10,000 narrow emission-line galaxies at $z < 0.35$ from SDSS DR18
+using optical BPT and WHAN diagnostic diagrams.  The BPT (Kewley+01) three-class
+scheme gives \bptSfPct{}\% star-forming, \bptCompPct{}\% composite, and \bptAgnPct{}\% AGN/Seyfert
+galaxies.  The WHAN diagram identifies a larger AGN fraction (36.6\,\%), mostly
+Strong AGN missed by BPT.  We cross-match the BPT AGN with WISE and find that
+1,408 of \wiseAgnSample{} (98.0\,\%) have mid-infrared counterparts; \wiseWedge{} (\wiseWedgePct{}\,\%) fall
+inside the Mateos+12 AGN selection wedge.  Using the [S\,II]~$\lambda\lambda$6717,6731
+flux ratio, we estimate electron densities for \neValid{} galaxies. We estimate
+supermassive black hole masses via the $M_{\rm BH}$--$\sigma$ relation of
+\citet{tremaine2002} and compare results with the \citet{gebhardt2000} and \citet{wu2009} calibrations.
+\end{abstract}
+
+%---------------------------------------------------------------------
+\section{Introduction}
+%---------------------------------------------------------------------
+
+When a telescope takes a spectrum of a galaxy, the emission lines in that
+spectrum tell us what is ionising the gas.  Hot young stars produce one
+pattern of line ratios; an accreting supermassive black hole (an Active
+Galactic Nucleus, or AGN) produces a different, ``harder'' pattern.
+(The most common AGN in the local Universe are Seyfert galaxies, which
+have bright, point-like nuclei with strong emission lines.)
+
+The standard way to separate star-forming galaxies from AGN is the BPT
+diagram \citep{baldwin1981,veilleux1987}, which plots
+$\log\,[{\rm O\,III}]/{\rm H}\beta$ against
+$\log\,[{\rm N\,II}]/{\rm H}\alpha$.  \citet{kewley2001} calculated the
+theoretical boundary that pure starburst galaxies cannot cross (the
+``maximum starburst line''), while \citet{kauffmann2003} drew an empirical
+line that best separates the two populations in real data.
+
+The BPT diagram has a limitation: it needs all four lines to be detected
+with good signal-to-noise.  \citet{cidfernandes2011} introduced the WHAN
+diagram, which uses only [N\,II]/H$\alpha$ and the H$\alpha$ equivalent
+width.  The WHAN diagram can classify galaxies that the BPT misses, and
+it can identify ``retired galaxies'' whose ionisation comes from old
+stars rather than an AGN.
+
+Mid-infrared colours from the WISE satellite \citep{wright2010} offer a
+different way to find AGN.  Hot dust near the black hole glows brightly
+at 12\,$\mu$m, producing a distinctive position in the
+$\log(f_{12}/f_{4.6})$ vs.\ $\log(f_{4.6}/f_{3.4})$ plane.
+\citet{mateos2012} defined a wedge in this plane that selects luminous
+AGN with high completeness.
+
+In this project we: (1) classify \samplesize{} SDSS galaxies with the BPT and
+WHAN diagrams; (2) cross-match the AGN with WISE and apply the Mateos+12
+mid-infrared selection; (3) measure the electron density of the
+narrow-line region gas and estimate black hole masses; and (4) look for
+trends in the gas properties across the BPT plane.
+
+%---------------------------------------------------------------------
+\section{Data and Sample Selection}
+\label{sec:data}
+%---------------------------------------------------------------------
+
+\subsection{SDSS Spectroscopic Data}
+
+We queried the Sloan Digital Sky Survey Data Release 18
+SkyServer\footnote{\url{https://skyserver.sdss.org/dr18/}} using
+paginated SQL requests.  The query joined the \texttt{SpecObj} table
+with \texttt{galSpecLine}; in DR18 this single table provides
+emission-line fluxes, equivalent widths, and velocity dispersions for
+all the lines we need.
+
+We selected galaxies with:
+\begin{itemize}
+  \item Redshift $0 < z < 0.35$;
+  \item Spectroscopic class \texttt{'GALAXY'};
+  \item Signal-to-noise ratio $\mathrm{S/N} \ge 3$ on all four
+        diagnostic lines: H$\alpha$, H$\beta$,
+        [O\,III]~$\lambda$5007, and [N\,II]~$\lambda$6584.
+\end{itemize}
+
+The query returned 10,000 galaxies; after removing 2 with physically
+impossible line fluxes (likely fiber contamination), the final sample
+contains \samplesize{} galaxies matching the criteria
+(sorted by \texttt{specObjID}), which we use for all
+subsequent analysis.  (The \texttt{specObjID} incorporates the
+SDSS plate and MJD, so the sample is slightly biased toward
+earlier-epoch SDSS observations.)  The redshift range, S/N cut, and
+``GALAXY'' class requirement ensure bright, well-measured narrow
+emission lines.
+
+\subsection{WISE Cross-Matching}
+
+We cross-matched the BPT AGN subsample (\wiseAgnSample{} galaxies) with the WISE
+All-Sky catalog via the SDSS SkyServer's \texttt{wise\_allsky} table.
+We used a matching radius of $3''$ (about half the WISE beam size at
+3.4\,$\mu$m).  For each SDSS object, we queried WISE sources within a
+bounding box around the position and kept the nearest match within the
+$3''$ tolerance.
+
+%---------------------------------------------------------------------
+\section{Task 1: BPT and WHAN Diagrams}
+\label{sec:task1}
+%---------------------------------------------------------------------
+
+\subsection{BPT Diagram}
+
+We computed the two line ratios from the SDSS flux measurements:
+\[
+\log\,([{\rm O\,III}]/{\rm H}\beta) \quad\text{and}\quad
+\log\,([{\rm N\,II}]/{\rm H}\alpha) .
+\]
+
+Figure~\ref{fig:bpt} shows the result.  Objects below the Kauffmann+03
+line are star-forming; objects between the two curves are composite
+(ionised by a mix of star formation and AGN activity); objects above
+the Kewley+01 line are classified as AGN/Seyfert.  Objects with
+$\log\,([{\rm N\,II}]/{\rm H}\alpha) \ge 0.47$---beyond the Kewley
+curve's valid range---are all in the high-excitation LINER/Seyfert 
+region and are classified as AGN.  (LINERs---Low-Ionization Nuclear
+Emission-line Regions---are a class of AGN with weaker [O\,III] relative
+to [N\,II] than classical Seyferts; our BPT analysis does not separate
+these two sub-classes.)
+
+When we collapse to the simpler two-class Kauffmann+03 scheme
+(star-forming below the line, AGN above), we get \kauffSfCount{} star-forming
+galaxies and \kauffAgnCount{} AGN (\kauffAgnPct{}\%).
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.55\textwidth]{../output/bpt_diagram.pdf}
+  \caption{BPT diagram.  Solid line: Kewley+01 maximum starburst line.
+           Dashed line: Kauffmann+03 empirical division.
+           Blue: star-forming; grey: composite; red: AGN/Seyfert.}
+  \label{fig:bpt}
+\end{figure}
+
+\begin{table}[htbp]
+  \centering
+  \caption{BPT (Kewley+01 three-class) classification.}
+  \label{tab:bpt_stats}
+  \begin{tabular}{lrr}
+    \toprule
+    Class & $N$ & Fraction \\
+    \midrule
+    Star-forming & \bptSfCount{} & \bptSfPct{}\,\% \\
+    Composite    & \bptCompCount{} & \bptCompPct{}\,\% \\
+    AGN/Seyfert  & \bptAgnCount{} & \bptAgnPct{}\,\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{WHAN Diagram}
+
+The WHAN diagram uses H$\alpha$ equivalent width (EW) on the vertical
+axis instead of [O\,III]/H$\beta$.  We took the absolute value of the
+EW from \texttt{galSpecLine}, since DR18 stores emission-line EWs as
+negative numbers.  The classification boundaries follow
+\citet{cidfernandes2011}:
+\begin{itemize}
+  \item \textbf{Star-forming}: $\log([{\rm N\,II}]/{\rm H}\alpha) \le -0.4$
+        and $W_{{\rm H}\alpha} > 3$\,\AA;
+  \item \textbf{Strong AGN}: $\log([{\rm N\,II}]/{\rm H}\alpha) > -0.4$
+        and $W_{{\rm H}\alpha} > 6$\,\AA;
+  \item \textbf{Weak AGN (wAGN)}: $\log([{\rm N\,II}]/{\rm H}\alpha) > -0.4$
+        and $3 < W_{{\rm H}\alpha} \le 6$\,\AA;
+  \item \textbf{Retired galaxies}: $W_{{\rm H}\alpha} < 3$\,\AA\ (but
+        $\ge 0.5$\,\AA);
+  \item \textbf{Passive galaxies}: $W_{{\rm H}\alpha} < 0.5$\,\AA.
+\end{itemize}
+
+Following the task instructions, Figure~\ref{fig:whan} colours points
+by their BPT classification, not by WHAN class, so we can see where
+each BPT type falls in the WHAN plane.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.55\textwidth]{../output/whan_diagram.pdf}
+  \caption{WHAN diagram.  Points are coloured by BPT class (Kewley+01).
+           Blue: star-forming; grey: composite; red: AGN/Seyfert.
+           Dashed lines show the WHAN classification boundaries at
+           $\log([{\rm N\,II}]/{\rm H}\alpha)=-0.4$ and
+           $W_{{\rm H}\alpha}=3,\,6$\,\AA.}
+  \label{fig:whan}
+\end{figure}
+
+\begin{table}[htbp]
+  \centering
+  \caption{WHAN classification (Cid Fernandes+\whanPassCount{}).}
+  \label{tab:whan_stats}
+  \begin{tabular}{lrr}
+    \toprule
+    Class & $N$ & Fraction \\
+    \midrule
+    Star-forming & \whanSfCount{} & \whanSfPct{}\,\% \\
+    Strong AGN   & \whanStrongCount{} & \whanStrongPct{}\,\% \\
+    wAGN         &   \whanWagnCount{} &  \whanWagnPct{}\,\% \\
+    Retired      & \whanRetCount{} & \whanRetPct{}\,\% \\
+    Passive      &    \whanPassCount{} &  \whanPassPct{}\,\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Comparing BPT and WHAN}
+
+The two diagrams give very different AGN fractions: the BPT finds
+\wiseAgnSample{} AGN (14.4\,\%), while the WHAN finds \whanAgnTotCount{} when combining Strong
+AGN and wAGN (36.6\,\%).  Only \bothAgnCount{} galaxies (\bothAgnPct{}\,\% of the full
+sample) are AGN by both methods.
+
+The \whanOnlyCount{} galaxies that WHAN classifies as AGN but BPT does not are
+mostly Strong AGN (\woStrongCount{}, \woStrongPct{}\%), with the rest being wAGN (599,
+20.1\,\%).  These objects have $\log\,([{\rm N\,II}]/{\rm H}\alpha)$ high
+enough to be WHAN AGN but lie in the star-forming or composite regions
+of the BPT diagram (40\,\% are BPT Star-forming, 60\,\% BPT
+Composite)---they are low-excitation objects that the optical diagnostic
+classifies less strictly.
+
+The \bptOnlyCount{} BPT-only AGN (those classified as AGN/Seyfert by BPT but not
+by WHAN) are almost entirely Retired galaxies by the WHAN scheme (746,
+97.8\,\%), with a few Star-forming (\boSfCount{}) and Passive (\boPassCount{}).  These are
+galaxies whose BPT line ratios look like AGN but whose H$\alpha$
+equivalent widths are too weak ($<3$\,\AA) for WHAN to flag them as
+AGN.  They likely host low-luminosity AGN or post-starburst
+populations.
+
+%---------------------------------------------------------------------
+\section{Task 2: WISE Mid-Infrared Colours}
+\label{sec:task2}
+%---------------------------------------------------------------------
+
+Figure~\ref{fig:wise} shows the WISE colour-colour diagram for the
+1,408 BPT AGN with reliable mid-infrared photometry.  The diagram is
+overlaid with the Mateos+12 AGN selection wedge.
+
+The wedge is defined by:
+\begin{align}
+  y &= 0.315\,x \quad \text{(centre line)} \\
+  y_{\rm top}    &= 0.315\,x + 0.297 \\
+  y_{\rm bottom} &= 0.315\,x - 0.\whanPassCount{}0 \\
+  y_{\rm PL}  &= -3.172\,x + 0.436 \quad (\alpha = -0.3\ \text{limit})
+\end{align}
+where $x = \log_{10}(f_{12\,\mu{\rm m}}/f_{4.6\,\mu{\rm m}})$ and
+$y = \log_{10}(f_{4.6\,\mu{\rm m}}/f_{3.4\,\mu{\rm m}})$.
+We converted WISE magnitudes to fluxes using
+$f_\nu \propto 10^{-m/2.5}$; the zero-points cancel in the ratios.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.55\textwidth]{../output/wise_diagram.pdf}
+  \caption{WISE colour-colour diagram.  The grey wedge is the Mateos+12
+           AGN selection region.  Red points are WISE AGN; blue points
+           are outside the wedge.}
+  \label{fig:wise}
+\end{figure}
+
+\begin{table}[htbp]
+  \centering
+  \caption{WISE cross-match and AGN classification.}
+  \label{tab:wise_stats}
+  \begin{tabular}{lr}
+    \toprule
+    Metric & Value \\
+    \midrule
+    BPT AGN sample & \wiseAgnSample{} \\\\
+    With WISE match within $3''$ & \wiseMatched{} (\wiseMatchRate{}\,\%) \\
+    With good WISE photometry & \wiseMatched{} \\\\
+    In Mateos+12 wedge (WISE AGN) & \wiseWedge{} (\wiseWedgePct{}\,\% of matched) \\
+    AGN by both BPT and WISE & \wiseWedge{} \\\\
+    Outside wedge & \wiseOutside{} (\wiseOutsidePct{}\,\%) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Only 19.2\,\% of the optically-selected AGN also have WISE mid-infrared
+colours that place them in the Mateos+12 wedge.  This is expected: the
+Mateos+12 wedge was designed to select luminous AGN with bright hot
+dust, while the BPT diagram catches lower-luminosity Seyferts and
+LINERs that may not have strong mid-infrared excess.  The 80.8\,\% of
+BPT AGN outside the wedge are likely weaker sources---low-luminosity
+Seyferts or systems where the host galaxy's starlight overwhelms
+the AGN in the WISE bands.
+
+%---------------------------------------------------------------------
+\section{Task 3: Electron Density, Kinematics, and Black Hole Mass}
+\label{sec:task3}
+%---------------------------------------------------------------------
+
+\subsection{\texorpdfstring{Electron Density from [S\,II]}{Electron Density from [S II]}}
+
+The ratio of the two [S\,II] lines depends on how densely packed the
+electrons are in the gas.  When the electron density $n_e$ is low
+($\lesssim 10^2$\,cm$^{-3}$), the 6717\,\AA\ line is stronger than the
+6731\,\AA\ line (ratio $\approx 1.4$).  At higher densities, collisions
+redistribute the electrons between the two energy levels, and the ratio
+drops toward $\sim 0.45$.
+
+We computed $n_e$ using the PyNeb \texttt{temden} routine,
+following the methodology of \citet{sanders2016}, with an assumed electron temperature
+$T_e = 10,000$\,K, typical for the narrow-line region.  (The [S\,II]
+ratio depends on both density and temperature; without an independent
+$T_e$ measurement the derived densities carry a systematic uncertainty
+of about 0.2--0.3\,dex.)
+
+Of the 10,000 originally queried galaxies, 8,720 had S/N $\ge 3$ on both
+[S\,II] lines; after removing the 2 contaminated spectra, \siiSample{} remain.
+PyNeb returned valid densities for \neValid{} of these---the rest have
+ratios outside the theoretical range of the [S\,II] diagnostic.
+(Approximately \siiAboveLimitPct{}\% of all measured ratios exceed the strict
+low-density limit of $\sim$1.45, though PyNeb's internal convergence
+criteria accept a slightly wider range, rejecting 35.2\,\%; in either
+case, noise in the faint [S\,II] lines inflates many ratios beyond the
+physically meaningful range.)
+
+Figure~\ref{fig:ne_bpt} shows the median electron density across the
+BPT plane.  Most galaxies have $n_e$ between 10 and $10^3$\,cm$^{-3}$,
+with no strong gradient across the classification boundaries.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.55\textwidth]{../output/bpt_density_map.pdf}
+  \caption{Electron density map on the BPT plane.  Colour scale:
+           $\log_{10}(n_e/{\rm cm}^{-3})$.}
+  \label{fig:ne_bpt}
+\end{figure}
+
+\subsection{\texorpdfstring{[O\,III] Velocity Dispersion}{[O III] Velocity Dispersion}}
+
+The [O\,III] and [S\,II] lines are forbidden transitions that only form
+in low-density gas ($n_e \lesssim 10^4$\,cm$^{-3}$); at the much higher
+densities of the Broad-Line Region these lines are collisionally
+suppressed.  This identifies the measured gas with the Narrow-Line
+Region.  We use \texttt{sigma\_forbidden}, which measures only the
+forbidden-line widths, further isolating the NLR kinematics from any
+broad Balmer-line component.
+
+We used the \texttt{sigma\_forbidden} column from \texttt{galSpecLine},
+which gives the velocity dispersion of the forbidden emission lines
+(after instrumental correction).  All \siiSample{} objects with good [S\,II]
+measurements also have valid $\sigma_{[{\rm O\,III}]}$ values (range
+\sigmaMin{}--\sigmaMax{}~km\,s$^{-1}$---the 8 objects capped at exactly 500~km\,s$^{-1}$
+by the SDSS pipeline are in the full 9,998-galaxy sample but fall
+outside the S\,II S/N cut).  The median is 78~km\,s$^{-1}$.
+\sigmaSubTen{} objects have $\sigma < 10$~km\,s$^{-1}$, well below the SDSS
+instrumental resolution of $\sim$70~km\,s$^{-1}$; these are dominated
+by the instrumental correction and should be treated with caution.
+
+Figure~\ref{fig:sigma_bpt} maps $\sigma_{[{\rm O\,III}]}$ across the
+BPT diagram.  Velocity dispersions are generally higher in the AGN
+region of the diagram, which may reflect a combination of deeper
+gravitational potentials and AGN-driven gas motions.  We note that
+$\sigma_{[{\rm O\,III}]}$ correlates with redshift ($r \approx 0.41$
+across the full sample) due to the 3$''$ SDSS fiber covering a larger
+physical area at higher $z$, sampling more of the galaxy's rotation;
+comparisons of $\sigma$ across redshifts should account for this
+aperture bias.  Additionally, 8 objects have $\sigma_{[{\rm O\,III}]}$
+capped at exactly 500~km\,s$^{-1}$ by the SDSS pipeline and should be
+treated as lower limits (these are in the parent sample but not in the
+S\,II-filtered subset).
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.55\textwidth]{../output/bpt_sigma_map.pdf}
+  \caption{[O\,III] velocity dispersion map on the BPT plane.}
+  \label{fig:sigma_bpt}
+\end{figure}
+
+\subsection{Supermassive Black Hole Mass}
+
+Supermassive black hole mass correlates with the velocity dispersion of
+the stars (and gas) in the host galaxy's bulge---the $M_{\rm
+BH}$--$\sigma$ relation \citep{tremaine2002}.  We used:
+\begin{equation}
+  \log\left(\frac{M_{\rm BH}}{M_\odot}\right)
+  = 8.13 + 4.02\,\log\left(\frac{\sigma}{200\ {\rm km\,s}^{-1}}\right) .
+\end{equation}
+The normalisation point 200~km\,s$^{-1}$ corresponds to the velocity
+dispersion of a typical massive galaxy bulge.
+
+We clipped velocity dispersions to 10--500~km\,s$^{-1}$ before applying
+the formula to avoid unphysical results from measurement outliers.
+(Note that the lower clip of 10~km\,s$^{-1}$ is below the SDSS instrumental
+resolution of $\sim$70~km\,s$^{-1}$; values this low are dominated by
+the instrumental correction but are retained to avoid biasing the
+sample against low-mass galaxies.)
+Of the 8,718 galaxies with $\sigma_{[{\rm O\,III}]}$ measurements,
+\mbhNtrem{} give $M_{\rm BH}$ estimates within $10^4$--$10^{10}\,M_\odot$
+(\mbhBelowFour{} objects have $\log M_{\rm BH} \le 4$ and are excluded from the
+primary bins; the remaining \mbhBinOtherCount{} fall in the catch-all bin
+`Below $10^5$ or above $10^9$' shown in Table~\ref{tab:mbh_bins}).
+
+\textbf{Important caveat:} The \citet{tremaine2002} relation was calibrated on
+\emph{stellar} velocity dispersions.  We are applying it to
+\emph{gas} kinematics ($\sigma_{[{\rm O\,III}]}$), which can be
+affected by AGN-driven outflows.  The black hole masses derived here
+should be treated as indicative proxies, not precise measurements.
+
+\begin{table}[htbp]
+  \centering
+  \caption{SMBH mass distribution (\citet{tremaine2002}) and comparison with
+           \citet{gebhardt2000} and \citet{wu2009}.}
+  \label{tab:mbh_bins}
+  \begin{tabular}{p{4.5cm}rr}
+    \toprule
+    \textbf{Panel A:} Mass bins (\citealp{tremaine2002}) & $N$ & Fraction \\
+    \midrule
+    $10^5$--$10^6\,M_\odot$   & \mbhBinFiveSixCount{} & \mbhBinFiveSixPct{}\,\% \\
+    $10^6$--$10^7\,M_\odot$   & \mbhBinSixSevenCount{} & \mbhBinSixSevenPct{}\,\% \\
+    $10^7$--$10^8\,M_\odot$   & \mbhBinSevenEightCount{} & \mbhBinSevenEightPct{}\,\% \\
+    $10^8$--$10^9\,M_\odot$   &   \mbhBinEightNineCount{} &  \mbhBinEightNinePct{}\,\% \\
+    Below $10^5$ or above $10^9$ & \mbhBinOtherCount{} &  \mbhBinOtherPct{}\,\% \\
+    \midrule
+    \textbf{Panel B:} Relation & Median $\log(M_{\rm BH}/M_\odot)$ & $N$ \\
+    \midrule
+    \citealp{tremaine2002} & \mbhMedTrem{} & \mbhNtrem{} \\
+    \citealp{gebhardt2000} & \mbhMedGeb{} & \mbhNgeb{} \\
+    \citealp{wu2009}     & \mbhMedWu{} & \mbhNwu{} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Table~\ref{tab:mbh_bins} (Panel A) shows the mass distribution from our
+primary \citet{tremaine2002} estimate.  The sample peaks in the
+$10^6$--$10^7\,M_\odot$ bin (4\boSfPct{}\%), which is typical for galaxies
+at $z < 0.35$ in the SDSS spectroscopic sample.  Panel B compares the
+three calibrations; the slightly different $N$ values reflect the
+different slopes of each relation, which shift a few objects across
+the $\log M_{\rm BH} = 4$ boundary.  All three give consistent median
+masses of $3$--$4 \times 10^6\,M_\odot$.
+
+Figure~\ref{fig:mbh_hist} shows the full distribution and the split by
+BPT class.  AGN/Seyfert galaxies tend toward slightly higher black hole
+masses than star-forming galaxies, consistent with the idea that more
+massive black holes can drive higher ionisation states.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.48\textwidth]{../output/mbh_histogram.pdf}
+  \includegraphics[width=0.48\textwidth]{../output/mbh_by_class_histogram.pdf}
+  \caption{Left: SMBH mass histogram (\citealp{tremaine2002}).  Right: mass
+           distributions split by BPT class.}
+  \label{fig:mbh_hist}
+\end{figure}
+
+\subsection{Kinematics Binned by Black Hole Mass}
+
+We divided the sample into 1-dex bins in $M_{\rm BH}$ and plotted the
+[O\,III] velocity dispersion maps on the BPT plane for each bin.  If
+the NLR kinematics were dominated by outflows from the central engine,
+we might expect higher dispersions in more massive black holes.
+The binned maps are shown in Figure~\ref{fig:sigma_mbh}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.48\textwidth]{../output/bpt_sigma_mbh_5_6.pdf}\hfill
+  \includegraphics[width=0.48\textwidth]{../output/bpt_sigma_mbh_6_7.pdf}\\[4pt]
+  \includegraphics[width=0.48\textwidth]{../output/bpt_sigma_mbh_7_8.pdf}\hfill
+  \includegraphics[width=0.48\textwidth]{../output/bpt_sigma_mbh_8_9.pdf}
+  \caption{[O\,III] velocity dispersion on the BPT plane, binned by
+           $M_{\rm BH}$ (Tremaine+02).  Top-left: $10^5$--$10^6\,M_\odot$
+           (\mbhBinFiveSixCount{} objects).  Top-right: $10^6$--$10^7\,M_\odot$
+           (\mbhBinSixSevenCount{} objects).  Bottom-left: $10^7$--$10^8\,M_\odot$
+           (\mbhBinSevenEightCount{} objects).  Bottom-right: $10^8$--$10^9\,M_\odot$
+           (\mbhBinEightNineCount{} objects).}
+  \label{fig:sigma_mbh}
+\end{figure}
+
+The most massive bin ($10^8$--$10^9\,M_\odot$, 308 objects) shows a
+median $\sigma_{[{\rm O\,III}]}$ of 168~km\,s$^{-1}$, compared to
+\sigmaMedian{}~km\,s$^{-1}$ in the $10^5$--$10^6\,M_\odot$ bin---an increase
+consistent with the M-sigma relation itself rather than evidence for
+AGN-driven outflows.  Most galaxies across all mass bins have
+$\sigma_{[{\rm O\,III}]} \sim 50$--150~km\,s$^{-1}$, consistent with
+gravitational motions in the host bulge rather than strong outflows.
+
+%---------------------------------------------------------------------
+\section{Discussion}
+\label{sec:discussion}
+%---------------------------------------------------------------------
+
+\subsection{Why BPT and WHAN Disagree}
+
+The large difference between the BPT AGN fraction (14.4\,\%) and the
+WHAN AGN fraction (36.6\,\%) comes from the different information the
+two diagrams use.  BPT compares two line ratios; WHAN replaces the
+[O\,III]/H$\beta$ ratio with the H$\alpha$ equivalent width.  An object
+can have AGN-like [N\,II]/H$\alpha$ while having [O\,III]/H$\beta$
+too low to cross the Kauffmann line---the WHAN diagram catches these
+objects because it does not require strong [O\,III].
+
+The \woStrongCount{} WHAN-only Strong AGN are exactly this population:
+high-[N\,II] objects whose [O\,III] emission is weak enough to place
+them mostly in the composite region of the BPT diagram (60\,\%), with
+the rest in the star-forming region (40\,\%).  They may be
+low-luminosity AGN or systems where the narrow-line region gas is
+distant from the ionising source.
+
+The 746 BPT-only AGN that WHAN calls Retired have strong enough
+[O\,III] to reach the Seyfert region, but their H$\alpha$ equivalent
+widths are small ($<3$\,\AA).  This is the signature of
+post-starburst or weakly accreting systems---the line ratios still look
+like an AGN, but the total line flux relative to the continuum is low.
+
+\subsection{Optical vs.\ Mid-Infrared AGN}
+
+The Mateos+12 WISE wedge identifies only 19.2\,\% of our BPT AGN as
+mid-infrared AGN.  This is a feature, not a bug: the wedge selects
+luminous, unobscured AGN whose hot dust dominates the mid-infrared
+colours.  The 80.8\,\% of BPT AGN outside the wedge are likely weaker
+sources---low-luminosity Seyferts or systems where the host galaxy's
+stellar light overwhelms the AGN in the WISE bands.  A cross-match of
+the full sample (not just the BPT AGN) might reveal
+WISE-selected AGN that are optically classified as star-forming or
+composite.
+
+\subsection{NLR Gas Properties}
+
+The electron densities we measure ($n_e \sim 10$--$10^3$\,cm$^{-3}$)
+are typical of narrow-line region gas.  The lack of a strong gradient
+across the BPT plane suggests that the local gas density is not the
+main parameter controlling whether a galaxy appears as star-forming,
+composite, or AGN in the BPT diagram.  The [O\,III] velocity
+dispersions are also fairly uniform, although the highest values appear
+in the AGN region, which may indicate some contribution from
+non-gravitational motions.
+
+\subsection{Black Hole Masses}
+
+The SMBH mass distribution peaks at $M_{\rm BH} \sim 3 \times
+10^6\,M_\odot$, matching expectations for the typical SDSS galaxy at
+$z < 0.35$.  The three M-sigma calibrations agree within $\sim 0.13$\,dex
+in the median, which is well within the intrinsic scatter of the
+relation ($\sim 0.3$\,dex).  The tendency for AGN/Seyfert galaxies to
+have higher $M_{\rm BH}$ than star-forming galaxies is consistent with
+more massive black holes being able to ionise a larger fraction of the
+host galaxy's gas.
+
+%---------------------------------------------------------------------
+\section{Conclusions}
+\label{sec:conclusions}
+
+We analysed \samplesize{} narrow emission-line galaxies from SDSS DR18.  Our
+main results are:
+
+\begin{enumerate}
+  \item The BPT diagram classifies \bptSfPct{}\% as star-forming,
+        \bptCompPct{}\% as composite, and \bptAgnPct{}\% as AGN/Seyfert.
+  \item The WHAN diagram finds a much larger AGN fraction
+        (\whanAgnTotPct{}\%), driven by Strong AGN that fall on the
+        star-forming side of the BPT diagram.
+  \item Only \bothAgnPct{}\% of galaxies are AGN by both BPT and WHAN.
+        The \whanOnlyCount{} WHAN-only AGN are \woStrongPct{}\,\% Strong AGN; the \bptOnlyCount{}
+        BPT-only AGN are \boRetPct{}\,\% Retired galaxies.
+  \item \wiseMatched{} of \wiseAgnSample{} BPT AGN (\wiseMatchRate{}\%) have WISE counterparts;
+        \wiseWedge{} of these (\wiseWedgePct{}\%) satisfy the Mateos+12 mid-infrared
+        wedge, consistent with the wedge selecting only the most
+        luminous AGN with strong hot dust emission.
+  \item Electron densities from the [S\,II] ratio lie in
+        $10$--$10^3$\,cm$^{-3}$ with no strong BPT trend.
+  \item SMBH masses (\citet{tremaine2002}) peak at $\sim 3 \times 10^6\,M_\odot$,
+        with \citet{gebhardt2000} and \citet{wu2009} giving consistent results.
+\end{enumerate}
+
+%---------------------------------------------------------------------
+\appendix
+\section{Tables}
+\label{sec:appendix_tables}
+
+Table~\ref{tab:sample_head} lists the first 10 galaxies in the sample
+with their key measured and derived properties.
+
+\begin{table}[htbp]
+  \centering
+  \caption{First 10 galaxies in the classified sample.}
+  \label{tab:sample_head}
+  \small
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{rrrrrrcrr}
+    \toprule
+    specObjID & $z$ &
+    $\log\,{\rm NII/H}\alpha$ & $\log\,{\rm OIII/H}\beta$ &
+    EW(H$\alpha$) & BPT & WHAN &
+    $\sigma_{[{\rm OIII}]}$ & $\log M_{\rm BH}$ \\
+    \midrule
+    299489677444933632 & 0.02 & $-0.32$ & $-0.24$ & 5.6 & Composite & wAGN & 124 & 7.29 \\
+    29949050207\sigmaMedian{}54464 & 0.06 & $-0.28$ & $-0.08$ & 5.1 & Composite & wAGN & \whanPassCount{}6 & 7.17 \\
+    299491051834468352 & 0.05 & $-0.69$ & $-0.03$ & 21.2 & SF & SF & 38 & 5.22 \\
+    29949270\whanPassCount{}01910016 & 0.06 & $-0.50$ & $-0.42$ & 32.9 & SF & SF & 51 & 5.76 \\
+    299493250857723904 & 0.06 & $-0.49$ & $-0.31$ & 24.8 & SF & SF & 76 & 6.43 \\
+    299494075491444736 & 0.06 & $-0.44$ & $-0.51$ & 14.4 & SF & SF & 71 & 6.31 \\
+    299496274514700288 & 0.13 & $-0.12$ & $-0.05$ & 4.8 & Composite & wAGN & 194 & 8.08 \\
+    299496824270514176 & 0.01 & $-1.01$ & $0.12$ & 13.7 & SF & SF & 35 & 5.10 \\
+    299499298171676672 & 0.05 & $-0.14$ & $-0.22$ & 15.4 & Composite & Strong AGN & 91 & 6.76 \\
+    2995006725612\whanPassCount{}392 & 0.07 & $-0.38$ & $-0.57$ & 22.0 & SF & Strong AGN & \sigmaMedian{} & 6.65 \\
+    \bottomrule
+  \end{tabular}%
+  }
+\end{table}
+
+\section{Python Code}
+\label{sec:appendix_code}
+
+The complete Python code is organised in the \texttt{agn\_project}
+package and the \texttt{scripts/} directory.
+
+\lstinputlisting[language=Python, caption=\texttt{agn\_project/config.py}]{../agn_project/config.py}
+\lstinputlisting[language=Python, caption=\texttt{agn\_project/sdss.py}]{../agn_project/sdss.py}
+\lstinputlisting[language=Python, caption=\texttt{agn\_project/classification.py}]{../agn_project/classification.py}
+\lstinputlisting[language=Python, caption=\texttt{agn\_project/plots.py}]{../agn_project/plots.py}
+\lstinputlisting[language=Python, caption=\texttt{agn\_project/wise.py}]{../agn_project/wise.py}
+\lstinputlisting[language=Python, caption=\texttt{agn\_project/physics.py}]{../agn_project/physics.py}
+\lstinputlisting[language=Python, caption=\texttt{agn\_project/utils.py}]{../agn_project/utils.py}
+
+\bibliographystyle{apalike}
+\bibliography{references}
+
+\end{document}
