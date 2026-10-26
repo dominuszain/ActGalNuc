@@ -1,10 +1,15 @@
-# INFERNUS [www.doi.org/10.13140/RG.2.2.18744.71680]
+# INFERNUS
 
-# Classification of Emission-Line Galaxies with SDSS and WISE
+**Classification of emission-line galaxies with SDSS and WISE**
 
-A fully reproducible astrophysical data analysis pipeline that classifies narrow emission-line galaxies using optical (BPT, WHAN) and mid-infrared (WISE) diagnostics, and derives physical properties including electron density and supermassive black hole mass via the M-sigma relation.
+[![DOI](https://img.shields.io/badge/DOI-10.13140%2FRG.2.2.18744.71680-blue)](https://doi.org/10.13140/RG.2.2.18744.71680)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 
-**Author:** Zain Ul Abideen — Erasmus Mundus MASS Programme
+A reproducible astrophysical data analysis pipeline that classifies narrow emission-line galaxies using optical (BPT, WHAN) and mid-infrared (WISE) diagnostics, and derives physical properties including electron density and supermassive black hole mass via the M-sigma relation.
+
+**Author:** Zain Ul Abideen, Erasmus Mundus MASS programme
+**GitHub repository:** [dominuszain/ActGalNuc](https://github.com/dominuszain/ActGalNuc)
 
 ## Scientific Summary
 
@@ -163,3 +168,21 @@ All constants and analytic curves live in a single `config.py` — the single so
 - Tremaine et al. (2002) — M-sigma
 - Gebhardt et al. (2000) — M-sigma (alternate)
 - Wu (2009) — M-sigma (alternate)
+
+## Citation
+
+If you use this code or the classification results, please cite the project report:
+
+```bibtex
+@software{ulabideen_infernus_2026,
+  author = {Ul Abideen, Zain},
+  title  = {INFERNUS: Classification of Emission-Line Galaxies with SDSS and WISE},
+  year   = {2026},
+  doi    = {10.13140/RG.2.2.18744.71680},
+  url    = {https://github.com/dominuszain/ActGalNuc}
+}
+```
+
+## License
+
+The code is released under the [MIT License](LICENSE).

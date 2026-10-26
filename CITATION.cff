@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "INFERNUS: Classification of Emission-Line Galaxies with SDSS and WISE"
+abstract: "A reproducible pipeline for classifying narrow emission-line galaxies with BPT and WHAN diagnostics, cross-matching with WISE, and estimating electron density and supermassive black hole mass."
+authors:
+  - family-names: Ul Abideen
+    given-names: Zain
+    email: zain2@uni-bremen.de
+    affiliation: University of Bremen
+version: "1.0.0"
+date-released: "2026-10-26"
+license: MIT
+doi: "10.13140/RG.2.2.18744.71680"
+url: "https://github.com/dominuszain/ActGalNuc"
+repository-code: "https://github.com/dominuszain/ActGalNuc"
+keywords:
+  - astrophysics
+  - active galactic nuclei
+  - emission-line galaxies
+  - BPT diagram
+  - WISE
+  - SDSS
+EOF
